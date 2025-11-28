@@ -6,6 +6,8 @@ const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
   console.warn("API Key is missing. Please check your environment variables (.env file or Vercel Dashboard).");
+} else {
+  console.log("Gemini Service initialized with API Key present.");
 }
 
 // Initialize the client. We pass an empty string if undefined to prevent constructor errors,

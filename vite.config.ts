@@ -6,11 +6,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Prevents "ReferenceError: process is not defined" in browser
+      // Safely replace API_KEY with the string value or empty string to prevent build errors
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY || ''),
+      // Defines a polyfill for process.env for libraries that rely on it
       'process.env': {},
-      // Polyfill API_KEY specifically
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY),
-      'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
       outDir: 'dist',
