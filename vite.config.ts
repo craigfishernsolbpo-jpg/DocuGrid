@@ -54,4 +54,8 @@ export default defineConfig(({ mode }) => {
     }
   };
 });
+export default defineConfig({
+  base: './', // relative paths
+  plugins: [react()]
+})
 
