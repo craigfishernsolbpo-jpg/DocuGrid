@@ -9,11 +9,14 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // Safely replace process.env.API_KEY with the actual string value.
-      // Priority: Vercel System Env > Local .env
       'process.env.API_KEY': JSON.stringify(env.API_KEY || process.env.API_KEY || ''),
     },
     build: {
       outDir: 'dist',
+    },
+    server: {
+      port: 5173,
+      host: true
     }
   };
 });

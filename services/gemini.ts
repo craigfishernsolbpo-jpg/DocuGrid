@@ -1,19 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 
 // This will be replaced by Vite during build with the actual key string
-const API_KEY = process.env.API_KEY;
+// We cast to string to satisfy TypeScript if type definitions are missing
+const API_KEY = process.env.API_KEY as string;
 
 if (!API_KEY) {
-  console.warn("API Key is missing. Please check your environment variables (.env file or Vercel Dashboard).");
+  console.warn("API Key is missing. Please check your environment variables.");
 }
 
-// Initialize the client. We pass an empty string if undefined to prevent constructor errors,
-// though actual API calls will fail if the key is invalid.
-const ai = new GoogleGenAI({ apiKey: API_KEY || '' });
+// Initialize the client. 
+const ai = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_KEY' });
 
 export const extractCsvFromPdf = async (base64Pdf: string): Promise<string> => {
-  if (!API_KEY) {
-    throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
+  if (!API_KEY || API_KEY === 'MISSING_KEY') {
+    throw new Error("API Key is missing. Please add API_KEY to your environment variables (.env file or Vercel Dashboard).");
   }
 
   try {
