@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Table, Grid, FileSpreadsheet, Copy, ExternalLink, Check } from 'lucide-react';
+import { Download, Table, Grid, FileSpreadsheet, Copy, ExternalLink, Check, AlertCircle } from 'lucide-react';
 import { downloadCSV } from '../utils/csv';
 
 interface DataViewerProps {
@@ -18,6 +18,9 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
 
   const headers = data[0];
   const rows = data.slice(1);
+  
+  // Check if this is demo data by looking for the specific ID or content
+  const isDemoData = rawCsv.includes('DEMO-DATA') || rawCsv.includes('DEMO_FALLBACK');
 
   const handleCopyToClipboard = async () => {
     // Convert to TSV for Google Sheets paste
@@ -47,6 +50,17 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
 
   return (
     <div className="w-full space-y-4 animate-fade-in-up">
+      
+      {isDemoData && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3 text-amber-800 text-sm">
+           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+           <div>
+              <p className="font-semibold">Demo Mode Active</p>
+              <p className="text-amber-700/80">You are viewing sample data because no valid API key was provided. To process your actual file, please click "Set API Key" in the header.</p>
+           </div>
+        </div>
+      )}
+
       {/* Header with Tabs */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
         <div className="space-y-3 flex-1">

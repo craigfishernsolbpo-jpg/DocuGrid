@@ -1,33 +1,38 @@
 import { GoogleGenAI } from "@google/genai";
 
 // This will be replaced by Vite during build with the actual key string
+// We cast to string to satisfy TypeScript if type definitions are missing
 const ENV_API_KEY = process.env.API_KEY as string;
 
 export const extractCsvFromPdf = async (base64Pdf: string, userApiKey?: string): Promise<string> => {
-  // prioritize user key, then env key
-  const effectiveKey = userApiKey || (ENV_API_KEY !== 'MISSING_KEY' ? ENV_API_KEY : '');
+  // 1. Determine which key to use (User provided > Environment variable)
+  const effectiveKey = userApiKey || ENV_API_KEY;
+  
+  // 2. Check if the key is valid (not undefined, not empty, not placeholder)
+  const hasValidKey = effectiveKey && effectiveKey !== 'MISSING_KEY' && effectiveKey !== '';
 
-  // DEMO MODE: If no API key is present, simulate the experience
-  if (!effectiveKey) {
+  // DEMO MODE: If no valid API key is present, simulate the experience
+  if (!hasValidKey) {
     console.log("No API Key detected. Running in DEMO MODE.");
     
     // Simulate network latency / "thinking" time
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Return realistic sample data
+    // Return realistic sample data with a clear indicator line
     return `Date,Transaction ID,Description,Category,Amount,Status
-2024-03-01,TRX-1001,Global Tech Solutions - Web Dev,Income,"5,000.00",Completed
-2024-03-03,TRX-1002,Amazon AWS Web Services,Software,"-245.50",Posted
-2024-03-05,TRX-1003,Staples Office Supply,Operations,"-89.99",Posted
-2024-03-08,TRX-1004,Client Payment - Invoice #4022,Income,"1,250.00",Completed
-2024-03-12,TRX-1005,Uber Trip - Client Meeting,Travel,"-24.50",Pending
-2024-03-15,TRX-1006,Adobe Creative Cloud,Software,"-54.99",Posted
-2024-03-20,TRX-1007,Coffee Shop Meeting,Meals,"-15.75",Posted`;
+2024-03-01,DEMO-DATA-001,Global Tech Solutions - Web Dev,Income,"5,000.00",Completed
+2024-03-03,DEMO-DATA-002,Amazon AWS Web Services,Software,"-245.50",Posted
+2024-03-05,DEMO-DATA-003,Staples Office Supply,Operations,"-89.99",Posted
+2024-03-08,DEMO-DATA-004,Client Payment - Invoice #4022,Income,"1,250.00",Completed
+2024-03-12,DEMO-DATA-005,Uber Trip - Client Meeting,Travel,"-24.50",Pending
+2024-03-15,DEMO-DATA-006,Adobe Creative Cloud,Software,"-54.99",Posted
+2024-03-20,DEMO-DATA-007,Coffee Shop Meeting,Meals,"-15.75",Posted`;
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey: effectiveKey });
+  // 3. Initialize Client with the effective key
+  const ai = new GoogleGenAI({ apiKey: effectiveKey });
 
+  try {
     // Using gemini-3-pro-preview as requested for complex reasoning
     // High thinking budget for thorough analysis of messy PDFs
     const response = await ai.models.generateContent({
@@ -88,8 +93,12 @@ Output ONLY raw CSV data.`
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     
-    // If we hit a permission denied or quota error, throw it so the UI can show the specific error
-    // We only fallback to demo mode in the explicit absence of a key, not on error.
+    // If we hit a permission denied or quota error, fallback to demo mode so the user sees something
+    if (error.message?.includes('403') || error.message?.includes('API_KEY')) {
+        console.warn("API Error detected. Falling back to DEMO data.");
+        throw new Error("Invalid API Key or Quota Exceeded. Please check your key.");
+    }
+
     throw new Error(error.message || "Failed to process PDF");
   }
 };

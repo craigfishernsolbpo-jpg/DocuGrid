@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import FileUploader from './components/FileUploader';
 import DataViewer from './components/DataViewer';
+import ApiKeyModal from './components/ApiKeyModal';
 import { fileToBase64, extractCsvFromPdf } from './services/gemini';
 import { parseCSV } from './utils/csv';
 import { AppState, ExtractionResult } from './types';
-import { BrainCircuit, AlertTriangle, CheckCircle2, Table, Download, Info } from 'lucide-react';
+import { BrainCircuit, AlertTriangle, CheckCircle2, Table, Download, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -14,20 +15,52 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [processingTime, setProcessingTime] = useState<number>(0);
   
-  // Initialize with key from localStorage if available
-  const [userApiKey, setUserApiKey] = useState<string>(() => {
-    return localStorage.getItem('gemini_api_key') || '';
-  });
+  // API Key Management
+  const [userApiKey, setUserApiKey] = useState<string>('');
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
-  const handleApiKeyChange = (key: string) => {
+  // Load saved key from localStorage on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) setUserApiKey(savedKey);
+  }, []);
+
+  const handleSaveApiKey = (key: string) => {
     setUserApiKey(key);
     localStorage.setItem('gemini_api_key', key);
+    setIsApiKeyModalOpen(false);
+    
+    // If we had a file pending upload, process it now
+    if (pendingFile) {
+      processFile(pendingFile, key);
+      setPendingFile(null);
+    }
   };
 
-  const hasEnvKey = process.env.API_KEY && process.env.API_KEY !== 'MISSING_KEY' && process.env.API_KEY !== '';
-  const isDemoMode = !userApiKey && !hasEnvKey;
+  const handleUseDemo = () => {
+    setIsApiKeyModalOpen(false);
+    if (pendingFile) {
+      processFile(pendingFile, ''); // Empty key triggers demo mode
+      setPendingFile(null);
+    }
+  };
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = (file: File) => {
+    const envKey = process.env.API_KEY;
+    const hasEnvKey = envKey && envKey !== 'MISSING_KEY' && envKey !== '';
+    
+    // If we have an ENV key or a User key, proceed.
+    // Otherwise, ask the user.
+    if (hasEnvKey || userApiKey) {
+      processFile(file, userApiKey);
+    } else {
+      setPendingFile(file);
+      setIsApiKeyModalOpen(true);
+    }
+  };
+
+  const processFile = async (file: File, apiKey: string) => {
     setCurrentFile(file);
     setAppState(AppState.PROCESSING);
     setError(null);
@@ -40,7 +73,8 @@ const App: React.FC = () => {
 
     try {
       const base64 = await fileToBase64(file);
-      const csvString = await extractCsvFromPdf(base64, userApiKey);
+      // Pass the userApiKey (if exists) to the service
+      const csvString = await extractCsvFromPdf(base64, apiKey);
       const parsed = parseCSV(csvString);
       
       setResult({
@@ -67,7 +101,14 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
-      <Header apiKey={userApiKey} onApiKeyChange={handleApiKeyChange} />
+      <Header onOpenApiKey={() => setIsApiKeyModalOpen(true)} hasKey={!!userApiKey} />
+
+      <ApiKeyModal 
+        isOpen={isApiKeyModalOpen} 
+        onSave={handleSaveApiKey} 
+        onUseDemo={handleUseDemo}
+        onClose={() => setIsApiKeyModalOpen(false)}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
@@ -81,20 +122,6 @@ const App: React.FC = () => {
               Our AI thinks through the visual layout to restructure broken tables into clean CSVs.
             </p>
         </div>
-
-        {/* Demo Mode Warning */}
-        {isDemoMode && appState === AppState.IDLE && (
-            <div className="max-w-2xl mx-auto mb-8 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-                <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                    <h4 className="font-semibold text-amber-900 text-sm">Running in Demo Mode</h4>
-                    <p className="text-sm text-amber-700 mt-1">
-                        No API Key detected. The app will return sample data for demonstration purposes. 
-                        To process real documents, please click <strong>"Set API Key"</strong> in the top right.
-                    </p>
-                </div>
-            </div>
-        )}
 
         {/* Main Action Area */}
         <div className="mb-12">
@@ -142,11 +169,6 @@ const App: React.FC = () => {
 
           {appState === AppState.COMPLETE && result && (
             <div className="space-y-8 animate-fade-in">
-               {isDemoMode && (
-                   <div className="max-w-7xl mx-auto bg-amber-50 text-amber-800 p-3 rounded-lg text-center text-sm font-medium border border-amber-100">
-                        ⚠ Showing Sample Data (Demo Mode). Add your API Key to process real files.
-                   </div>
-               )}
                <div className="flex items-center justify-between max-w-7xl mx-auto bg-indigo-900 text-white p-4 rounded-xl shadow-lg">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-6 h-6 text-emerald-400" />
