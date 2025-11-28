@@ -1,13 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Access API_KEY safely via Vite's define replacement.
-// Vite replaces 'process.env.API_KEY' with the actual string value at build time.
+// This will be replaced by Vite during build with the actual key string
 const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
   console.warn("API Key is missing. Please check your environment variables (.env file or Vercel Dashboard).");
-} else {
-  console.log("Gemini Service initialized with API Key present.");
 }
 
 // Initialize the client. We pass an empty string if undefined to prevent constructor errors,
@@ -16,7 +13,7 @@ const ai = new GoogleGenAI({ apiKey: API_KEY || '' });
 
 export const extractCsvFromPdf = async (base64Pdf: string): Promise<string> => {
   if (!API_KEY) {
-    throw new Error("API Key is missing. Please add VITE_API_KEY or API_KEY to your environment variables.");
+    throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
   }
 
   try {
