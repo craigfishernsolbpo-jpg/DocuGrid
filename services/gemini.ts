@@ -1,25 +1,22 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Safely access API_KEY, falling back to empty string if undefined
-// This prevents 'process is not defined' errors in non-Node environments if polyfills fail
-const getApiKey = () => {
-  try {
-    return process.env.API_KEY;
-  } catch (e) {
-    console.warn("process.env.API_KEY is not directly accessible. Ensure it is defined in vite.config.ts");
-    return undefined;
-  }
-};
-
-const API_KEY = getApiKey();
+// Access API_KEY safely via Vite's define replacement.
+// Vite replaces 'process.env.API_KEY' with the actual string value at build time.
+const API_KEY = process.env.API_KEY;
 
 if (!API_KEY) {
-  console.error("API Key is missing. Please check your environment variables.");
+  console.warn("API Key is missing. Please check your environment variables (.env file or Vercel Dashboard).");
 }
 
+// Initialize the client. We pass an empty string if undefined to prevent constructor errors,
+// though actual API calls will fail if the key is invalid.
 const ai = new GoogleGenAI({ apiKey: API_KEY || '' });
 
 export const extractCsvFromPdf = async (base64Pdf: string): Promise<string> => {
+  if (!API_KEY) {
+    throw new Error("API Key is missing. Please add VITE_API_KEY or API_KEY to your environment variables.");
+  }
+
   try {
     // Using gemini-3-pro-preview as requested for complex reasoning
     // High thinking budget for thorough analysis of messy PDFs
@@ -56,7 +53,6 @@ Output ONLY raw CSV data.`
         thinkingConfig: {
             thinkingBudget: 32768 // Max budget for gemini-3-pro-preview
         },
-        // Note: We are NOT setting maxOutputTokens to allow full CSV generation
       }
     });
 
