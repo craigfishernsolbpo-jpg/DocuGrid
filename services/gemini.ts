@@ -1,6 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// Safely access API_KEY, falling back to empty string if undefined
+// This prevents 'process is not defined' errors in non-Node environments if polyfills fail
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY;
+  } catch (e) {
+    console.warn("process.env.API_KEY is not directly accessible. Ensure it is defined in vite.config.ts");
+    return undefined;
+  }
+};
+
+const API_KEY = getApiKey();
 
 if (!API_KEY) {
   console.error("API Key is missing. Please check your environment variables.");
