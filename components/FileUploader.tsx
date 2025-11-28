@@ -50,15 +50,27 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileSelect, isProcessing 
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isProcessing && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        inputRef.current?.click();
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div
+        role="button"
+        tabIndex={isProcessing ? -1 : 0}
+        aria-label="Upload PDF file"
+        aria-disabled={isProcessing}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          relative group cursor-pointer
+          relative group cursor-pointer focus:outline-none focus:ring-4 focus:ring-indigo-100
           border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 ease-in-out
           ${isDragging 
             ? 'border-indigo-500 bg-indigo-50 scale-[1.02]' 
@@ -73,6 +85,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onFileSelect, isProcessing 
           onChange={handleChange}
           accept="application/pdf"
           className="hidden"
+          tabIndex={-1}
         />
         
         <div className="space-y-4">

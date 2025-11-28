@@ -5,7 +5,7 @@ import DataViewer from './components/DataViewer';
 import { fileToBase64, extractCsvFromPdf } from './services/gemini';
 import { parseCSV } from './utils/csv';
 import { AppState, ExtractionResult } from './types';
-import { BrainCircuit, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { BrainCircuit, Loader2, AlertTriangle, CheckCircle2, Table, Download } from 'lucide-react';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -78,7 +78,7 @@ const App: React.FC = () => {
           )}
 
           {appState === AppState.PROCESSING && (
-            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center">
+            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center animate-fade-in">
               <div className="relative w-20 h-20 mx-auto mb-6">
                 <div className="absolute inset-0 bg-indigo-100 rounded-full animate-ping opacity-75"></div>
                 <div className="relative bg-white p-4 rounded-full border-2 border-indigo-50 shadow-sm flex items-center justify-center h-full w-full">
@@ -98,7 +98,7 @@ const App: React.FC = () => {
           )}
 
           {appState === AppState.ERROR && (
-            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-red-100 p-8 text-center">
+            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-red-100 p-8 text-center animate-fade-in">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
@@ -114,7 +114,7 @@ const App: React.FC = () => {
           )}
 
           {appState === AppState.COMPLETE && result && (
-            <div className="space-y-8">
+            <div className="space-y-8 animate-fade-in">
                <div className="flex items-center justify-between max-w-7xl mx-auto bg-indigo-900 text-white p-4 rounded-xl shadow-lg">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-6 h-6 text-emerald-400" />
@@ -142,10 +142,10 @@ const App: React.FC = () => {
 
         {/* Features Grid (shown when idle) */}
         {appState === AppState.IDLE && (
-           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20">
+           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20 animate-fade-in-up">
              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
-                 <Table className="w-5 h-5 text-blue-600" /> // Using lucide-react Table icon
+                 <Table className="w-5 h-5 text-blue-600" />
                </div>
                <h3 className="font-semibold text-slate-900 mb-2">Smart Table Reconstruction</h3>
                <p className="text-sm text-slate-500 leading-relaxed">Detects column headers and merges multi-line rows automatically, even from scanned images.</p>
@@ -159,7 +159,7 @@ const App: React.FC = () => {
              </div>
              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                 <Download className="w-5 h-5 text-emerald-600" /> // Using lucide-react Download icon
+                 <Download className="w-5 h-5 text-emerald-600" />
                </div>
                <h3 className="font-semibold text-slate-900 mb-2">Instant Export</h3>
                <p className="text-sm text-slate-500 leading-relaxed">Preview your data instantly in the browser and download as a formatted CSV file ready for Excel.</p>
@@ -175,8 +175,5 @@ const App: React.FC = () => {
     </div>
   );
 };
-
-// Helper icons for the grid that weren't imported at top level
-import { Table, Download } from 'lucide-react';
 
 export default App;

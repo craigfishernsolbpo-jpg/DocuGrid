@@ -22,8 +22,11 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
   const handleCopyToClipboard = async () => {
     // Convert to TSV for Google Sheets paste
     const tsv = data.map(row => row.map(cell => {
-      // Simple escaping for TSV if needed
-      return cell.includes('\t') || cell.includes('\n') ? `"${cell.replace(/"/g, '""')}"` : cell;
+      // Escape quotes and wrap in quotes if cell contains tab, newline, or quote
+      if (cell.includes('\t') || cell.includes('\n') || cell.includes('"')) {
+        return `"${cell.replace(/"/g, '""')}"`;
+      }
+      return cell;
     }).join('\t')).join('\n');
 
     try {
@@ -32,6 +35,7 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy', err);
+      alert('Failed to copy to clipboard automatically. Please check permissions.');
     }
   };
 
@@ -154,7 +158,7 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
                                     Copy Data to Clipboard
                                 </span>
                              </div>
-                             {copied && <Check className="w-6 h-6 text-green-500 animate-in fade-in zoom-in" />}
+                             {copied && <Check className="w-6 h-6 text-green-500 animate-fade-in" />}
                         </button>
 
                         <div className="flex justify-center">
@@ -178,7 +182,7 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
                     </div>
                      
                      <p className="text-xs text-slate-400 bg-white inline-block px-3 py-1 rounded-full border border-slate-100">
-                        Tip: Press <kbd className="font-mono font-bold text-slate-600">Ctrl+V</kbd> in the first cell of your new sheet.
+                        Tip: Press <kbd className="font-mono font-bold text-slate-600">Cmd/Ctrl + V</kbd> in the first cell of your new sheet.
                      </p>
                 </div>
              </div>
