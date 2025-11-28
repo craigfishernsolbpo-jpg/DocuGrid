@@ -55,13 +55,15 @@ Output ONLY raw CSV data.`
     }
 
     let cleanedText = text;
-    // Extract content from code block if present (e.g., ```csv ... ```)
-    const codeBlockMatch = text.match(/```(?:csv)?\n([\s\S]*?)```/);
+    // Improved regex to capture content inside code blocks, handling optional language identifier
+    // Matches ```csv ... ```, ``` ... ```, etc.
+    const codeBlockMatch = text.match(/```(?:csv|txt)?\s*([\s\S]*?)\s*```/i);
     if (codeBlockMatch) {
       cleanedText = codeBlockMatch[1];
     } else {
-        // Fallback cleanup if no code blocks but still has potential markdown artifacts
-        cleanedText = text.replace(/```csv\n?/g, '').replace(/```\n?/g, '');
+        // Fallback: cleanup if no code blocks but still has potential markdown artifacts
+        // Remove leading/trailing backticks if they exist
+        cleanedText = text.replace(/^```(?:csv)?/i, '').replace(/```$/i, '');
     }
     
     return cleanedText.trim();

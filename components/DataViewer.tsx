@@ -22,11 +22,12 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
   const handleCopyToClipboard = async () => {
     // Convert to TSV for Google Sheets paste
     const tsv = data.map(row => row.map(cell => {
-      // Escape quotes and wrap in quotes if cell contains tab, newline, or quote
-      if (cell.includes('\t') || cell.includes('\n') || cell.includes('"')) {
-        return `"${cell.replace(/"/g, '""')}"`;
+      let content = cell;
+      // Escape quotes and wrap in quotes if cell contains tab, newline, or quote to ensure Sheets pastes correctly
+      if (content.includes('\t') || content.includes('\n') || content.includes('"')) {
+        content = `"${content.replace(/"/g, '""')}"`;
       }
-      return cell;
+      return content;
     }).join('\t')).join('\n');
 
     try {
@@ -140,7 +141,7 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
                     <div>
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Export to Google Sheets</h3>
                         <p className="text-slate-500">
-                            Since we can't access your private Drive directly, here is the fastest way to move your data:
+                            We've formatted your data for Google Sheets. Follow these two simple steps:
                         </p>
                     </div>
 
@@ -182,7 +183,7 @@ const DataViewer: React.FC<DataViewerProps> = ({ data, rawCsv, fileName }) => {
                     </div>
                      
                      <p className="text-xs text-slate-400 bg-white inline-block px-3 py-1 rounded-full border border-slate-100">
-                        Tip: Press <kbd className="font-mono font-bold text-slate-600">Cmd/Ctrl + V</kbd> in the first cell of your new sheet.
+                        Tip: Press <kbd className="font-mono font-bold text-slate-600">Cmd/Ctrl + V</kbd> in the first cell (A1) of your new sheet.
                      </p>
                 </div>
              </div>

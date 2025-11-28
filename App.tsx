@@ -5,7 +5,7 @@ import DataViewer from './components/DataViewer';
 import { fileToBase64, extractCsvFromPdf } from './services/gemini';
 import { parseCSV } from './utils/csv';
 import { AppState, ExtractionResult } from './types';
-import { BrainCircuit, Loader2, AlertTriangle, CheckCircle2, Table, Download } from 'lucide-react';
+import { BrainCircuit, AlertTriangle, CheckCircle2, Table, Download } from 'lucide-react';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -19,8 +19,8 @@ const App: React.FC = () => {
     setAppState(AppState.PROCESSING);
     setError(null);
     setResult(null);
+    setProcessingTime(0);
     
-    const startTime = Date.now();
     const timer = setInterval(() => {
         setProcessingTime(prev => prev + 0.1);
     }, 100);
