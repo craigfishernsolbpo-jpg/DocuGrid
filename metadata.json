@@ -1,0 +1,5 @@
+{
+  "name": "DocuGrid AI",
+  "description": "Intelligent PDF-to-Spreadsheet extractor powered by Gemini 3 Pro. Converts messy PDF tables into clean, structured CSV files.",
+  "requestFramePermissions": []
+}
