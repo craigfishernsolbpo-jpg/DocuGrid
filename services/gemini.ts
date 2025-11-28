@@ -1,27 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
 // This will be replaced by Vite during build with the actual key string
-// We cast to string to satisfy TypeScript if type definitions are missing
-const API_KEY = process.env.API_KEY as string;
+const ENV_API_KEY = process.env.API_KEY as string;
 
-// Initialize the client. 
-// We allow initialization to fail silently here, as we check inside the function
-let ai: GoogleGenAI | null = null;
-try {
-  if (API_KEY && API_KEY !== 'MISSING_KEY' && API_KEY !== '') {
-    ai = new GoogleGenAI({ apiKey: API_KEY });
-  }
-} catch (e) {
-  console.warn("Failed to initialize GoogleGenAI client", e);
-}
+export const extractCsvFromPdf = async (base64Pdf: string, userApiKey?: string): Promise<string> => {
+  // prioritize user key, then env key
+  const effectiveKey = userApiKey || (ENV_API_KEY !== 'MISSING_KEY' ? ENV_API_KEY : '');
 
-export const extractCsvFromPdf = async (base64Pdf: string): Promise<string> => {
   // DEMO MODE: If no API key is present, simulate the experience
-  if (!API_KEY || API_KEY === 'MISSING_KEY' || API_KEY === '') {
+  if (!effectiveKey) {
     console.log("No API Key detected. Running in DEMO MODE.");
     
     // Simulate network latency / "thinking" time
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Return realistic sample data
     return `Date,Transaction ID,Description,Category,Amount,Status
@@ -34,12 +25,9 @@ export const extractCsvFromPdf = async (base64Pdf: string): Promise<string> => {
 2024-03-20,TRX-1007,Coffee Shop Meeting,Meals,"-15.75",Posted`;
   }
 
-  if (!ai) {
-     // Should theoretically be caught by the Demo Mode check above, but for type safety:
-     throw new Error("AI Client not initialized.");
-  }
-
   try {
+    const ai = new GoogleGenAI({ apiKey: effectiveKey });
+
     // Using gemini-3-pro-preview as requested for complex reasoning
     // High thinking budget for thorough analysis of messy PDFs
     const response = await ai.models.generateContent({
@@ -100,14 +88,8 @@ Output ONLY raw CSV data.`
   } catch (error: any) {
     console.error("Gemini API Error:", error);
     
-    // If we hit a permission denied or quota error, fallback to demo mode so the user sees something
-    if (error.message?.includes('403') || error.message?.includes('API_KEY')) {
-        console.warn("API Error detected. Falling back to DEMO data.");
-        return `Date,Error Note,Description,Category,Amount
-2024-01-01,DEMO_FALLBACK,API Key invalid or quota exceeded,System,0.00
-2024-01-01,DEMO_FALLBACK,Showing sample data instead,System,0.00`;
-    }
-
+    // If we hit a permission denied or quota error, throw it so the UI can show the specific error
+    // We only fallback to demo mode in the explicit absence of a key, not on error.
     throw new Error(error.message || "Failed to process PDF");
   }
 };
